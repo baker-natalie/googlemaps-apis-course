@@ -1,18 +1,11 @@
 <html>
- <head>
-   <style type="text/css">
-     html, body { font-family: Arial, sans-serif; height: 100%; margin: 0; padding: 0; }
-     .container { height: 100%; position: relative; }
-     input { font-size: 12px; }
-     h1 { color: #525454; font-size: 22px; margin: 0 0 10px 0; text-align: center; }
-     #hide-listings,
-     #show-listings { width: 48%; }
-     #map { bottom: 0px; height: 100%; left: 362px; position: absolute; right: 0px; }
-     .options-box { background: #fff; border: 1px solid #999; border-radius: 3px; height: 100%; line-height: 35px; padding: 10px 10px 30px 10px; text-align: left; width: 340px; }
+<head>
+    <!-- CSS styles -->
+    <style type="text/css"> html, body { font-family: Arial, sans-serif; height: 100%; margin: 0; padding: 0; } .container { height: 100%; position: relative; } input { font-size: 12px; } h1 { color: #525454; font-size: 22px; margin: 0 0 10px 0; text-align: center; } #hide-listings, #show-listings { width: 48%; } #map { bottom: 0px; height: 100%; left: 362px; position: absolute; right: 0px; } .options-box { background: #fff; border: 1px solid #999; border-radius: 3px; height: 100%; line-height: 35px; padding: 10px 10px 30px 10px; text-align: left; width: 340px; }
    </style>
- </head>
- <body>
-   <div class="container">
+</head>
+<body>
+    <div class="container">
     	<div class="options-box">
     		<h1>Find a Museum in Houston!</h1>
     		<div>
@@ -20,17 +13,38 @@
     			<input id="hide-listings" type="button" value="Hide Listings">
     		</div>
     	</div>
-   </div>
-   <div id="map"></div>
-   <script>
-   		var map;
+    </div>
+    <div id="map"></div>
+    <script>
+        // Create a global variable to represent the map
+   	    var map;
+        // Create a blank array for the markers we want shown on the map
    		var markers = [];
+        // Create the map!
      	function initMap() {
+            // Create a styles array to use with the map
+            var styles = [
+                {
+                    featureType: 'water',
+                    stylers: [
+                        { color: '#0066ff' }
+                    ]
+                },{
+                    featureType: 'road.highway',
+                    elementType: 'geometry.stroke',
+                    stylers: [
+                        { color: '#cc0044'}
+                    ]
+                }
+            ]
+            // Constructor creates a new map
      		map = new google.maps.Map(document.getElementById('map'), {
      			center: {lat: 29.762778, lng: -95.383056},
 	     		zoom: 11,
+                styles: styles,
 	     		mapTypeControl: false
      		});
+            // The locations we want to include
      		var locations = [
      			{title: 'Asia Society Texas Center', location: {lat: 29.726287, lng: -95.384678}},
      			{title: 'Buffalo Soldiers Museum', location: {lat: 29.735910, lng: -95.378052}},
@@ -53,6 +67,7 @@
      			{title: 'The Museum of Fine Arts Houston', location: {lat: 29.725798, lng: -95.390424}}
      		];
      		var largeInfowindow = new google.maps.InfoWindow();
+            // Loop over all locations and create a marker and infowindow for each
      		for (var i = 0; i < locations.length; i++) {
      			var position = locations[i].location;
      			var title = locations[i].title;
@@ -68,9 +83,11 @@
      				populateInfoWindow(this, largeInfowindow);
      			});
      		}
+            // Show or hide the listing markers with a click
      		document.getElementById('show-listings').addEventListener('click', showListings);
      		document.getElementById('hide-listings').addEventListener('click', hideListings);
      	}
+        // When the marker click event fires, populateInfoWindow creates a window with information about the selected marker location
      	function populateInfoWindow(marker, infowindow) {
      		if (infowindow.marker != marker) {
      			infowindow.marker = marker;
@@ -81,6 +98,7 @@
      			});
        		}
      	}
+        // When the show-listings click event fires, the map displays all markers and zooms so that all are visible on the screen
      	function showListings() {
      		var bounds = new google.maps.LatLngBounds();
      		for (var i = 0; i < markers.length; i++) {
@@ -89,12 +107,13 @@
      		}
      		map.fitBounds(bounds);
      	}
+        // When the hide-listings click event fires, the map hides all markers
      	function hideListings() {
      		for (var i = 0; i < markers.length; i++) {
      			markers[i].setMap(null);
      		}
      	}
-   </script>
-   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwYUgFAZRmyKAsqaKJdN7bT5kvFn7Pd3c&v=3&callback=initMap"></script>
- </body>
+    </script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwYUgFAZRmyKAsqaKJdN7bT5kvFn7Pd3c&v=3&callback=initMap"></script>
+</body>
 </html
