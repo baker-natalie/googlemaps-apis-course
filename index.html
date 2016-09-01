@@ -1,0 +1,102 @@
+<!--GoogleMaps API key: AIzaSyBQEJDMp-8pDpg13L2Zu-8UmfEoo1xBb0M
+server key: AIzaSyA2l5pYaySnBFtJYcLOwwKG9sCQmFm3tgk -->
+<html>
+ <head>
+   <style type="text/css">
+     html, body { font-family: Arial, sans-serif; height: 100%; margin: 0; padding: 0; }
+     .container { height: 100%; position: relative; }
+     input { font-size: 12px; }
+     h1 { color: #525454; font-size: 22px; margin: 0 0 10px 0; text-align: center; }
+     #hide-listings,
+     #show-listings { width: 48%; }
+     #map { bottom: 0px; height: 100%; left: 362px; position: absolute; right: 0px; }
+     .options-box { background: #fff; border: 1px solid #999; border-radius: 3px; height: 100%; line-height: 35px; padding: 10px 10px 30px 10px; text-align: left; width: 340px; }
+   </style>
+ </head>
+ <body>
+   <div class="container">
+    	<div class="options-box">
+    		<h1>Find a Museum in Houston!</h1>
+    		<div>
+    			<input id="show-listings" type="button" value="Show Listings">
+    			<input id="hide-listings" type="button" value="Hide Listings">
+    		</div>
+    	</div>
+   </div>
+   <div id="map"></div>
+   <script>
+   		var map;
+   		var markers = [];
+     	function initMap() {
+     		map = new google.maps.Map(document.getElementById('map'), {
+     			center: {lat: 29.762778, lng: -95.383056},
+	     		zoom: 11,
+	     		mapTypeControl: false
+     		});
+     		var locations = [
+     			{title: 'Asia Society Texas Center', location: {lat: 29.726287, lng: -95.384678}},
+     			{title: 'Buffalo Soldiers Museum', location: {lat: 29.735910, lng: -95.378052}},
+     			{title: 'Childrens Museum of Houston', location: {lat: 29.722793, lng: -95.385225}},
+     			{title: 'Contemporary Arts Museum Houston', location: {lat: 29.726333, lng: -95.391465}},
+     			{title: 'Czech Center Museum Houston', location: {lat: 29.728954, lng: -95.384915}},
+     			{title: 'DiverseWorks', location: {lat: 29.740289, lng: -95.378852}},
+     			{title: 'Holocaust Museum Houston', location: {lat: 29.725153, lng: -95.385660}},
+     			{title: 'Houston Center for Contemporary Craft', location: {lat: 29.730541, lng: -95.386025}},
+     			{title: 'Houston Center for Photography', location: {lat: 29.738381, lng: -95.397273}},
+     			{title: 'Houston Museum of African American Culture', location: {lat: 29.729538, lng: -95.382399}},
+     			{title: 'Houston Museum of Natural Science', location: {lat: 29.721802, lng: -95.389942}},
+     			{title: 'Houston Zoo', location: {lat: 29.716094, lng: -95.390114}},
+     			{title: 'Lawndale Art Center', location: {lat: 29.729880, lng: -95.386574}},
+     			{title: 'Rice Gallery', location: {lat: 29.718329, lng: -95.397927}},
+     			{title: 'Rothko Chapel', location: {lat: 29.737624, lng: -95.396166}},
+     			{title: 'The Health Museum', location: {lat: 29.721698, lng: -95.386011}},
+     			{title: 'The Jung Center', location: {lat: 29.726789, lng: -95.391392}},
+     			{title: 'The Menil Collection', location: {lat: 29.737368, lng: -95.398521}},
+     			{title: 'The Museum of Fine Arts Houston', location: {lat: 29.725798, lng: -95.390424}}
+     		];
+     		var largeInfowindow = new google.maps.InfoWindow();
+     		for (var i = 0; i < locations.length; i++) {
+     			var position = locations[i].location;
+     			var title = locations[i].title;
+     			var marker = new google.maps.Marker({
+     				map: map,
+     				position: position,
+     				title: title,
+     				animation: google.maps.Animation.DROP,
+     				id: i
+     			});
+     			markers.push(marker);
+     			marker.addListener('click', function() {
+     				populateInfoWindow(this, largeInfowindow);
+     			});
+     		}
+     		document.getElementById('show-listings').addEventListener('click', showListings);
+     		document.getElementById('hide-listings').addEventListener('click', hideListings);
+     	}
+     	function populateInfoWindow(marker, infowindow) {
+     		if (infowindow.marker != marker) {
+     			infowindow.marker = marker;
+     			infowindow.setContent('<div>' + marker.title + '</div>')
+     			infowindow.open(map, marker);
+     			infowindow.addListener('closeclick', function(){
+     				infowindow.marker = null;
+     			});
+       		}
+     	}
+     	function showListings() {
+     		var bounds = new google.maps.LatLngBounds();
+     		for (var i = 0; i < markers.length; i++) {
+     			markers[i].setMap(map);
+     			bounds.extend(markers[i].position);
+     		}
+     		map.fitBounds(bounds);
+     	}
+     	function hideListings() {
+     		for (var i = 0; i < markers.length; i++) {
+     			markers[i].setMap(null);
+     		}
+     	}
+   </script>
+   <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwYUgFAZRmyKAsqaKJdN7bT5kvFn7Pd3c&v=3&callback=initMap"></script>
+ </body>
+</html
