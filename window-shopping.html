@@ -6,22 +6,27 @@
 </head>
 <body>
     <div class="container">
-    	<div class="options-box">
-    		<h1>Find a Museum in Houston!</h1>
-    		<div>
-    			<input id="show-listings" type="button" value="Show Listings">
-    			<input id="hide-listings" type="button" value="Hide Listings">
-    		</div>
-    	</div>
+        <div class="options-box">
+            <h1>Find a Museum in Houston!</h1>
+            <div>
+                <input id="show-listings" type="button" value="Show Listings">
+                <input id="hide-listings" type="button" value="Hide Listings">
+                <hr>
+                <span class="text"> Draw a shape to search within it for attractions! </span>
+                <input id="toggle-drawing" type="button" value="Drawing Tools">
+            </div>
+        </div>
+        <div id="map"></div>
     </div>
-    <div id="map"></div>
-    <script>
+        <script>
         // Create a global variable to represent the map
-   	    var map;
+        var map;
         // Create a blank array for the markers we want shown on the map
-   		var markers = [];
+        var markers = [];
+        // Create global polygon variable to ensure only ONE polygon is rendered.
+        var polygon = null;
         // Create the map!
-     	function initMap() {
+        function initMap() {
             // Create a styles array to use with the map
             var styles = [
                 {
@@ -38,82 +43,161 @@
                 }
             ]
             // Constructor creates a new map
-     		map = new google.maps.Map(document.getElementById('map'), {
-     			center: {lat: 29.762778, lng: -95.383056},
-	     		zoom: 11,
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: 29.762778, lng: -95.383056},
+                zoom: 11,
                 styles: styles,
-	     		mapTypeControl: false
-     		});
+                mapTypeControl: false
+            });
             // The locations we want to include
-     		var locations = [
-     			{title: 'Asia Society Texas Center', location: {lat: 29.726287, lng: -95.384678}},
-     			{title: 'Buffalo Soldiers Museum', location: {lat: 29.735910, lng: -95.378052}},
-     			{title: 'Childrens Museum of Houston', location: {lat: 29.722793, lng: -95.385225}},
-     			{title: 'Contemporary Arts Museum Houston', location: {lat: 29.726333, lng: -95.391465}},
-     			{title: 'Czech Center Museum Houston', location: {lat: 29.728954, lng: -95.384915}},
-     			{title: 'DiverseWorks', location: {lat: 29.740289, lng: -95.378852}},
-     			{title: 'Holocaust Museum Houston', location: {lat: 29.725153, lng: -95.385660}},
-     			{title: 'Houston Center for Contemporary Craft', location: {lat: 29.730541, lng: -95.386025}},
-     			{title: 'Houston Center for Photography', location: {lat: 29.738381, lng: -95.397273}},
-     			{title: 'Houston Museum of African American Culture', location: {lat: 29.729538, lng: -95.382399}},
-     			{title: 'Houston Museum of Natural Science', location: {lat: 29.721802, lng: -95.389942}},
-     			{title: 'Houston Zoo', location: {lat: 29.716094, lng: -95.390114}},
-     			{title: 'Lawndale Art Center', location: {lat: 29.729880, lng: -95.386574}},
-     			{title: 'Rice Gallery', location: {lat: 29.718329, lng: -95.397927}},
-     			{title: 'Rothko Chapel', location: {lat: 29.737624, lng: -95.396166}},
-     			{title: 'The Health Museum', location: {lat: 29.721698, lng: -95.386011}},
-     			{title: 'The Jung Center', location: {lat: 29.726789, lng: -95.391392}},
-     			{title: 'The Menil Collection', location: {lat: 29.737368, lng: -95.398521}},
-     			{title: 'The Museum of Fine Arts Houston', location: {lat: 29.725798, lng: -95.390424}}
-     		];
-     		var largeInfowindow = new google.maps.InfoWindow();
+            var locations = [
+                {title: 'Asia Society Texas Center', location: {lat: 29.726287, lng: -95.384678}},
+                {title: 'Buffalo Soldiers Museum', location: {lat: 29.735910, lng: -95.378052}},
+                {title: 'Childrens Museum of Houston', location: {lat: 29.722793, lng: -95.385225}},
+                {title: 'Contemporary Arts Museum Houston', location: {lat: 29.726333, lng: -95.391465}},
+                {title: 'Czech Center Museum Houston', location: {lat: 29.728954, lng: -95.384915}},
+                {title: 'DiverseWorks', location: {lat: 29.740289, lng: -95.378852}},
+                {title: 'Holocaust Museum Houston', location: {lat: 29.725153, lng: -95.385660}},
+                {title: 'Houston Center for Contemporary Craft', location: {lat: 29.730541, lng: -95.386025}},
+                {title: 'Houston Center for Photography', location: {lat: 29.738381, lng: -95.397273}},
+                {title: 'Houston Museum of African American Culture', location: {lat: 29.729538, lng: -95.382399}},
+                {title: 'Houston Museum of Natural Science', location: {lat: 29.721802, lng: -95.389942}},
+                {title: 'Houston Zoo', location: {lat: 29.716094, lng: -95.390114}},
+                {title: 'Lawndale Art Center', location: {lat: 29.729880, lng: -95.386574}},
+                {title: 'Rice Gallery', location: {lat: 29.718329, lng: -95.397927}},
+                {title: 'Rothko Chapel', location: {lat: 29.737624, lng: -95.396166}},
+                {title: 'The Health Museum', location: {lat: 29.721698, lng: -95.386011}},
+                {title: 'The Jung Center', location: {lat: 29.726789, lng: -95.391392}},
+                {title: 'The Menil Collection', location: {lat: 29.737368, lng: -95.398521}},
+                {title: 'The Museum of Fine Arts Houston', location: {lat: 29.725798, lng: -95.390424}}
+            ];
+            var largeInfowindow = new google.maps.InfoWindow();
+            // Initialize the drawing manager
+            var drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: google.maps.drawing.OverlayType.POLYGON,
+                drawingControl: true,
+                drawingControlOptions: {
+                    position: google.maps.ControlPosition.TOP_LEFT,
+                    drawingModes: [
+                        google.maps.drawing.OverlayType.POLYGON
+                    ]
+                }
+            });
             // Loop over all locations and create a marker and infowindow for each
-     		for (var i = 0; i < locations.length; i++) {
-     			var position = locations[i].location;
-     			var title = locations[i].title;
-     			var marker = new google.maps.Marker({
-     				map: map,
-     				position: position,
-     				title: title,
-     				animation: google.maps.Animation.DROP,
-     				id: i
-     			});
-     			markers.push(marker);
-     			marker.addListener('click', function() {
-     				populateInfoWindow(this, largeInfowindow);
-     			});
-     		}
+            for (var i = 0; i < locations.length; i++) {
+                var position = locations[i].location;
+                var title = locations[i].title;
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: position,
+                    title: title,
+                    animation: google.maps.Animation.DROP,
+                    id: i
+                });
+                markers.push(marker);
+                marker.addListener('click', function() {
+                    populateInfoWindow(this, largeInfowindow);
+                });
+            }
             // Show or hide the listing markers with a click
-     		document.getElementById('show-listings').addEventListener('click', showListings);
-     		document.getElementById('hide-listings').addEventListener('click', hideListings);
-     	}
+            document.getElementById('show-listings').addEventListener('click', showListings);
+            document.getElementById('hide-listings').addEventListener('click', hideListings);
+            document.getElementById('toggle-drawing').addEventListener('click', function() {
+                toggleDrawing(drawingManager);
+            });
+            /* When the polygon is captured, call the searhWithinPolygon function to show the markers within the polygon and hide any outside of it. */
+            drawingManager.addListener('overlaycomplete', function(event) {
+                // Check for an existing polygon
+                // If yes, get rid of it and remove markers
+                if (polygon) {
+                    polygon.setMap(null);
+                    hideListings(markers);
+                }
+                // Switching the drawing mode to the HAND (i.e., no longer drawing)
+                drawingManager.setDrawingMode(null);
+                // Creating a new editable polygon from the overlay.
+                polygon = event.overlay;
+                polygon.setEditable(true);
+                // Search within the polygon
+                searchWithinPolygon();
+                // Search again if the polygon is changed
+                polygon.getPath().addListener('set_at', searchWithinPolygon);
+                polygon.getPath().addListener('insert_at', searchWithinPolygon);
+            });
+        }
         // When the marker click event fires, populateInfoWindow creates a window with information about the selected marker location
-     	function populateInfoWindow(marker, infowindow) {
-     		if (infowindow.marker != marker) {
-     			infowindow.marker = marker;
-     			infowindow.setContent('<div>' + marker.title + '</div>')
-     			infowindow.open(map, marker);
-     			infowindow.addListener('closeclick', function(){
-     				infowindow.marker = null;
-     			});
-       		}
-     	}
+        function populateInfoWindow(marker, infowindow) {
+            if (infowindow.marker != marker) {
+                infowindow.setContent('');
+                infowindow.marker = marker;
+                infowindow.addListener('closeclick', function(){
+                    infowindow.marker = null;
+                });
+                var streetViewService = new google.maps.StreetViewService();
+                var radius = 50;
+                function getStreetView(data, status) {
+                    if (status == google.maps.StreetViewStatus.OK) {
+                        var nearStreetViewLocation = data.location.latLng;
+                        var heading = google.maps.geometry.spherical.computeHeading(
+                            nearStreetViewLocation, marker.position);
+                        infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
+                        var panoramaOptions = {
+                            position: nearStreetViewLocation,
+                            pov: {
+                                heading: heading,
+                                pitch: 30
+                            }
+                        };
+                        var panorama = new google.maps.StreetViewPanorama(
+                            document.getElementById('pano'), panoramaOptions
+                        );
+                    } else {
+                        infowindow.setContent('<div>' + marker.title + '</div>' + '<div>No Street View Found</div>');
+                    }
+                }
+                streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+                infowindow.open(map, marker);
+            }
+        }
         // When the show-listings click event fires, the map displays all markers and zooms so that all are visible on the screen
-     	function showListings() {
-     		var bounds = new google.maps.LatLngBounds();
-     		for (var i = 0; i < markers.length; i++) {
-     			markers[i].setMap(map);
-     			bounds.extend(markers[i].position);
-     		}
-     		map.fitBounds(bounds);
-     	}
+        function showListings() {
+            var bounds = new google.maps.LatLngBounds();
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(map);
+                bounds.extend(markers[i].position);
+            }
+            map.fitBounds(bounds);
+        }
         // When the hide-listings click event fires, the map hides all markers
-     	function hideListings() {
-     		for (var i = 0; i < markers.length; i++) {
-     			markers[i].setMap(null);
-     		}
-     	}
+        function hideListings() {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+        }
+        // Show/hide drawing options
+        function toggleDrawing(drawingManager) {
+            if (drawingManager.map) {
+                drawingManager.setMap(null);
+                // Get rid of existing polygon
+                if (polygon !== null) {
+                    polygon.setMap(null);
+                }
+            } else {
+                drawingManager.setMap(map);
+            }
+        }
+
+        /* Hide all markers outside polygon, so only markers within. Allows the user to specify an exact area of search */
+        function searchWithinPolygon() {
+            for (var i = 0; i < markers.length; i++) {
+                if (google.maps.geometry.poly.containsLocation(markers[i].position, polygon)) {
+                    markers[i].setMap(map);                  
+                } else {
+                    markers[i].setMap(null);
+                }
+            }
+        }
     </script>
-    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwYUgFAZRmyKAsqaKJdN7bT5kvFn7Pd3c&v=3&callback=initMap"></script>
+    <script async src="https://maps.googleapis.com/maps/api/js?libraries=geometry,drawing&key=AIzaSyAwYUgFAZRmyKAsqaKJdN7bT5kvFn7Pd3c&v=3&callback=initMap"></script>
 </body>
-</html
+</html>
